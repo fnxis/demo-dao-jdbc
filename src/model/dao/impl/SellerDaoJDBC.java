@@ -26,12 +26,7 @@ public class SellerDaoJDBC implements SellerDao {
         try {
 
             st=connection.prepareStatement("INSERT INTO  seller(Name,Email,BirthDate,BaseSalary,DepartmentId) VALUES(?,?,?,?,?)", Statement.RETURN_GENERATED_KEYS);
-            st.setString(1,seller.getNome());
-            st.setString(2,seller.getEmail());
-            st.setDate(3,new java.sql.Date(seller.getBirthDDate().getTime()));
-            st.setDouble(4,seller.getBaseSalary());
-            st.setInt(5,seller.getDepartment().getId());
-
+            sellerSet(seller,st);
             int rowAffected=st.executeUpdate();
             if(rowAffected>0){
                 ResultSet rs=st.getGeneratedKeys();
@@ -53,14 +48,42 @@ public class SellerDaoJDBC implements SellerDao {
 
     }
 
-    @Override
-    public void update(Seller seller) {
+    private void sellerSet(Seller seller,PreparedStatement st) throws SQLException {
+                st.setString(1,seller.getNome());
+                st.setString(2,seller.getEmail());
+                st.setDate(3,new java.sql.Date(seller.getBirthDDate().getTime()));
+                st.setDouble(4,seller.getBaseSalary());
+                st.setInt(5,seller.getDepartment().getId());
 
     }
 
     @Override
-    public void deleteById(Integer id) {
+    public void update(Seller seller) {
+        PreparedStatement st=null;
+        try {
+            st=connection.prepareStatement("UPDATE seller SET Name=?,Email=?,BirthDate=?,BaseSalary=?,DepartmentId=? WHERE Id=?");
+            sellerSet(seller,st);
+            st.setInt(6,seller.getId());
+            st.executeUpdate();
+        }catch (SQLException e){
+            throw  new DbException(e.getMessage());
+        }finally {
+            DB.closeStatement(st);
+        }
+    }
 
+    @Override
+    public void deleteById(Integer id) {
+        PreparedStatement st=null;
+        try {
+            st=connection.prepareStatement("DELETE FROM seller WHERE Id=?");
+            st.setInt(1,id);
+            st.executeUpdate();
+        }catch (SQLException e){
+            throw  new DbException(e.getMessage());
+        }finally {
+            DB.closeStatement(st);
+        }
     }
 
     @Override
